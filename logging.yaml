@@ -1,0 +1,31 @@
+---
+version: 1
+formatters:
+  simple:
+    format: '%(asctime)s [%(name)-10.10s] %(levelname)8s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+loggers:
+  __main__:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  billing:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  slack:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  urllib3:
+    level: WARNING
+  google:
+    level: WARNING
+root:
+  level: DEBUG
+  handlers: [console]

@@ -1,0 +1,65 @@
+---
+filters:
+  # Search for projects only in the organizations listed.
+  orgs:
+    - '9999999999999'
+    - '8888888888888'
+  # Filter out projects created in less than X days.
+  age_minimum_days: 5
+  # Filter out projects if any owner matches with any regex listed.
+  users_regex:
+    - kieras@.*
+    - .*@mycompany.com
+  # Filter out projects that matches with any of the list.
+  projects:
+    - my-special-project
+    - my-other-special-project
+slack:
+  # Activate/deactive Slack messages integration.
+  activate: false
+  # Do not send messages, only print them.
+  print_only: true
+  # Force send messages to a specific user. Set null to send to Project owners.
+  test_user: null
+  # Slack channel used by the team.
+  team_channel: my-team
+  # Send messages to channel if an error occurs when sending privately.
+  team_channel_fallback: true
+  # Force always send to team channel, instead of private messages.
+  send_to_team_channel: false
+  # Cost threshold to signal an alert highlight.
+  cost_alert_threshold: 10.0
+  # Cost threshold alert highlight emoji.
+  cost_alert_emoji: ':scream:'
+  bot:
+    # Bot name.
+    name: Zombie Projects Watcher Alpha
+    # Bot icon. An emoji.
+    emoji: ':money_with_wings:'
+  users_mapping:
+    # Mapping between Project owners login and Slack users.
+    akieras: kieras
+    eduardo: dudu
+billing:
+  # Activate/deactivate billing integration.
+  activate: false
+  # Project BigQuery client use to connect to dataset.
+  bigquery_client_project: my-project
+  # Full BigQuery view name with Billin export information.
+  # See example-bigquery-billing-costs-view.sql file for an example query.
+  cost_view_full_name: my-project.billing.cost_per_project_starting_from_last_month
+org_names_mapping:
+  # Mapping to give meaningful names to organizations in messages.
+  '9999999999999': my-org
+  '8888888888888': my-other-org
+# Activate/deactivate further debugging info.
+debug:
+  active_projects: false
+  enriched_projects: false
+  filtered_by_projects: false
+  filtered_by_users: false
+  filtered_by_age: false
+  grouped_by_owners: false
+# Filename for a dump of the projects with enriched information in JSON format.
+# Set null to not generate the dump file.
+dump_json_file_name: null
