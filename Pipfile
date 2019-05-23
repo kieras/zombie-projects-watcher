@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 name = "pypi"
 
 [packages]
-google-api-python-client = "==1.7.8"
+google-api-python-client = "==1.7.9"
 google-cloud-bigquery = "==1.11.1"
 grpcio = "==1.19.0"
 oauth2client = "==3.0.0"
