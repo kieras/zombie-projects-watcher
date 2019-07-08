@@ -204,7 +204,7 @@ def _get_owners_id(owners):
 def _get_owners(client, project):
     users = []
     project_id = project.get('projectId')
-    iamPolicy = client.projects().getIamPolicy(resource=project_id).execute()
+    iamPolicy = client.projects().getIamPolicy(resource=project_id, body={}).execute()
     bindings = iamPolicy.get('bindings', [])
     owners = list(filter(filter_owners, bindings))
     if not owners:
