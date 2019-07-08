@@ -41,7 +41,7 @@ def send_messages(projects_by_owner):
             if cost > COST_ALERT_THRESHOLD:
                 emoji = ' ' + COST_ALERT_EMOJI
             message += "> - `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
-        message += "If these projects are not being used anymore, please consider `deleting them to reduce infra costs`. :rip:"
+        message += "If these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
         slack_channel = "@{}".format(slack_user)
         if SEND_TO_TEAM_CHANNEL:
             slack_channel = "#{}".format(TEAM_CHANNEL)
