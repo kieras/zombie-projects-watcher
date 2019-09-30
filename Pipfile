@@ -16,7 +16,7 @@ python_version = "3.7"
 
 [dev-packages]
 pytest = "==3.9.3"
-pytest-mock = "==1.10.0"
+pytest-mock = "==1.11.0"
 coverage = "*"
 pylint = "*"
 rope = "*"
