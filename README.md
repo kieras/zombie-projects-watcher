@@ -35,3 +35,9 @@ See the `example-bigquery-billing-costs-view.sql` file of an example query to us
 Owners of the Projects receive messages like this one:
 
 ![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
+
+## Example message on Chat
+
+Messages like this one are sent to your Chat room:
+
+![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
