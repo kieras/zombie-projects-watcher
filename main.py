@@ -25,6 +25,7 @@ from filters import (
 )
 from billing import query_billing_info
 from slack import send_messages
+from chat import send_messages_to_chat
 
 
 ORGS_FILTER = CONFIG['filters']['orgs'].get()
@@ -32,6 +33,7 @@ PROJECTS_FILTER = CONFIG['filters']['projects'].get() or []
 USERS_REGEX_FILTER = CONFIG['filters']['users_regex'].get() or []
 AGE_MINIMUM_DAYS_FILTER = CONFIG['filters']['age_minimum_days'].get(int)
 SLACK_ACTIVATED = CONFIG['slack']['activate'].get(bool)
+CHAT_ACTIVATED = CONFIG['chat']['activate'].get(bool)
 BILLING_ACTIVATED = CONFIG['billing']['activate'].get(bool)
 DUMP_JSON_FILE_NAME = CONFIG['dump_json_file_name'].get()
 
@@ -109,8 +111,14 @@ def main():
     else:
         logger.info('Slack integration is not active.')
 
-    logger.info('Happy Friday! :)')
+    if CHAT_ACTIVATED:
+        logger.info('Sending Chat messages.')
+        send_messages_to_chat(projects_by_owner)
+        logger.info('All messages sent.')
+    else:
+        logger.info('Chat integration is not active.')
 
+    logger.info('Happy Friday! :)')
 
 
 def _get_projects(client):
