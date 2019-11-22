@@ -6,7 +6,7 @@ from config import CONFIG
 
 logger = logging.getLogger(__name__)
 
-slack_token = os.environ["SLACK_API_TOKEN"]
+slack_token = os.getenv("SLACK_API_TOKEN")
 sc = SlackClient(slack_token)
 
 ORGS_NAME_MAPPING = CONFIG['org_names_mapping'].get()

@@ -15,7 +15,7 @@ filters:
     - my-special-project
     - my-other-special-project
 slack:
-  # Activate/deactive Slack messages integration.
+  # Activate/deactivate Slack messages integration.
   activate: false
   # Do not send messages, only print them.
   print_only: true
@@ -40,6 +40,20 @@ slack:
     # Mapping between Project owners login and Slack users.
     akieras: kieras
     eduardo: dudu
+chat:
+  # Activate/deactivate Chat messages integration.
+  activate: false
+  # Do not send messages, only print them.
+  print_only: true
+  # Chat webhook URL.
+  webhook_url: https://...
+  # Cost threshold to signal an alert highlight.
+  cost_alert_threshold: 10.0
+  # Cost threshold alert highlight emoji.
+  cost_alert_emoji: ':scream:'
+  users_mapping:
+    # Mapping between Project owners login and Slack users.
+    akieras: akieras
 billing:
   # Activate/deactivate billing integration.
   activate: false
