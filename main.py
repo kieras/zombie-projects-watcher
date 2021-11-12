@@ -1,8 +1,9 @@
 import logging
 import logging.config
 import json
-from pprint import pformat
+from pprint import PrettyPrinter, pformat
 from datetime import datetime as dt
+from re import S
 from googleapiclient import discovery
 
 from logging_config import setup_logging
@@ -53,6 +54,8 @@ def main():
     logger.info('Filtering active Projects.')
     active_projects = list(filter(filter_active_projects_matching_org_level(
         ORGS_FILTER), projects))
+    with open('active_projects3.json','w') as file:
+        json.dump(active_projects, file, indent=4)
 
     if DEBUG_ACTIVE_PROJECTS:
         logger.debug('Active Projects:\n%s', pformat(active_projects))
@@ -122,10 +125,15 @@ def main():
 
 
 def _get_projects(client):
-    project_list = client.projects().list().execute()
-    projects = project_list.get('projects', [])
+    project_list_request = client.projects().list()
+    project_list_response = project_list_request.execute()
+    projects = project_list_response.get('projects', [])
+    while project_list_response.get('nextPageToken'):
+        project_list_request = client.projects().list_next(previous_request=project_list_request,\
+            previous_response=project_list_response)
+        project_list_response = project_list_request.execute()
+        projects = projects + project_list_response.get('projects', [])
     return projects
-
 
 def _get_resource_manager_client():
     client = discovery.build("cloudresourcemanager", "v1")
