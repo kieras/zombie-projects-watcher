@@ -54,9 +54,7 @@ def main():
     logger.info('Filtering active Projects.')
     active_projects = list(filter(filter_active_projects_matching_org_level(
         ORGS_FILTER), projects))
-    with open('active_projects3.json','w') as file:
-        json.dump(active_projects, file, indent=4)
-
+    
     if DEBUG_ACTIVE_PROJECTS:
         logger.debug('Active Projects:\n%s', pformat(active_projects))
 
@@ -134,6 +132,7 @@ def _get_projects(client):
         project_list_response = project_list_request.execute()
         projects = projects + project_list_response.get('projects', [])
     return projects
+
 
 def _get_resource_manager_client():
     client = discovery.build("cloudresourcemanager", "v1")
