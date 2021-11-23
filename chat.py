@@ -32,20 +32,23 @@ def send_messages_to_chat(projects_by_owner):
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
             emoji = ''
+            send_message_to_this_owner = False
             if cost > COST_ALERT_THRESHOLD:
                 emoji = ' ' + COST_ALERT_EMOJI
-            message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
+                message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
+                send_message_to_this_owner = True
         message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
-    
-        logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
-        if PRINT_ONLY:
-            return
-        message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
-        message_data = {
-            'text': message
-        }
-        message_data_json = json.dumps(message_data, indent=2)
-        response = requests.post(
-            WEBHOOK_URL, data=message_data_json, headers=message_headers)
-        if response.status_code != 200:
-            logger.error('Error sending message to Chat. Error: %s, Response: %s, Webhook: %s', response.status_code, pformat(response.text), WEBHOOK_URL)
+
+        if send_message_to_this_owner:
+            logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
+            if PRINT_ONLY:
+                return
+            message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+            message_data = {
+                'text': message
+            }
+            message_data_json = json.dumps(message_data, indent=2)
+            response = requests.post(
+                WEBHOOK_URL, data=message_data_json, headers=message_headers)
+            if response.status_code != 200:
+                logger.error('Error sending message to Chat. Error: %s, Response: %s, Webhook: %s', response.status_code, pformat(response.text), WEBHOOK_URL)
