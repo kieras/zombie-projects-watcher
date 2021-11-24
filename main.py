@@ -122,8 +122,14 @@ def main():
 
 
 def _get_projects(client):
-    project_list = client.projects().list().execute()
-    projects = project_list.get('projects', [])
+    project_list_request = client.projects().list()
+    project_list_response = project_list_request.execute()
+    projects = project_list_response.get('projects', [])
+    while project_list_response.get('nextPageToken'):
+        project_list_request = client.projects().list_next(previous_request=project_list_request,\
+            previous_response=project_list_response)
+        project_list_response = project_list_request.execute()
+        projects = projects + project_list_response.get('projects', [])
     return projects
 
 
