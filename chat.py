@@ -35,7 +35,7 @@ def send_messages_to_chat(projects_by_owner):
             currency = project.get('costCurrency', '$')
             emoji = ''
             if cost <= COST_MIN_TO_NOTIFY:
-                logger.debug('- `{}/{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
+                logger.debug('- `{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
             else:
                 if cost > COST_ALERT_THRESHOLD:
                     emoji = ' ' + COST_ALERT_EMOJI
