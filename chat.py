@@ -15,8 +15,7 @@ USERS_MAP = CONFIG['chat']['users_mapping'].get()
 PRINT_ONLY = CONFIG['chat']['print_only'].get(bool)
 COST_ALERT_THRESHOLD = CONFIG['chat']['cost_alert_threshold'].get(float)
 COST_ALERT_EMOJI = CONFIG['chat']['cost_alert_emoji'].get()
-COST_BELOW_VALUE_PROJECTS_EXCLUDED = CONFIG['chat']['minimun_cost_warning'].get()
-COST_WARNING_EMOJI = CONFIG['chat']['cost_warning_emoji'].get()
+COST_MIN_TO_NOTIFY = CONFIG['chat']['cost_min_to_notify'].get(float)
 
 
 def send_messages_to_chat(projects_by_owner):
@@ -35,10 +34,9 @@ def send_messages_to_chat(projects_by_owner):
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
             emoji = ''
-            if cost<= COST_BELOW_VALUE_PROJECTS_EXCLUDED:
-                logger.info('- `{}/{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
+            if cost <= COST_MIN_TO_NOTIFY:
+                logger.debug('- `{}/{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
             else:
-                emoji = COST_WARNING_EMOJI
                 if cost > COST_ALERT_THRESHOLD:
                     emoji = ' ' + COST_ALERT_EMOJI
                     send_message_to_this_owner = True
