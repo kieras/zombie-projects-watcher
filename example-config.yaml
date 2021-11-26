@@ -40,6 +40,8 @@ slack:
     # Mapping between Project owners login and Slack users.
     akieras: kieras
     eduardo: dudu
+  # Cost minimum to notify
+  cost_min_to_notify: 0.0
 chat:
   # Activate/deactivate Chat messages integration.
   activate: false
@@ -54,6 +56,8 @@ chat:
   users_mapping:
     # Mapping between Project owners login and Slack users.
     akieras: akieras
+  # Minimum Cost to notify the owner
+  cost_min_to_notify: 0.0
 billing:
   # Activate/deactivate billing integration.
   activate: false
