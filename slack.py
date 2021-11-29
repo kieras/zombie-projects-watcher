@@ -21,7 +21,7 @@ BOT_NAME = CONFIG['slack']['bot']['name'].get()
 BOT_EMOJI = CONFIG['slack']['bot']['emoji'].get()
 COST_ALERT_THRESHOLD = CONFIG['slack']['cost_alert_threshold'].get(float)
 COST_ALERT_EMOJI = CONFIG['slack']['cost_alert_emoji'].get()
-COST_MIN_TO_NOTIFY = CONFIG['chat']['cost_min_to_notify'].get(float)
+COST_MIN_TO_NOTIFY = CONFIG['slack']['cost_min_to_notify'].get(float)
 
 
 def send_messages(projects_by_owner):
@@ -45,7 +45,7 @@ def send_messages(projects_by_owner):
             else:
                 if cost > COST_ALERT_THRESHOLD:
                     emoji = ' ' + COST_ALERT_EMOJI
-                    send_message_to_this_owner = True
+                send_message_to_this_owner = True
                 message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
         message += "If these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
         if send_message_to_this_owner:
@@ -59,7 +59,7 @@ def send_messages(projects_by_owner):
                     if TEAM_CHANNEL_FALLBACK:
                         resp = _send_message("#{}".format(TEAM_CHANNEL), message)
                         if resp and not resp.get('ok'):
-                            logger.error('Error in fallback to tema channel: %s, Channel: %s, Response: %s', resp.get('error'), slack_channel, pformat(resp))
+                            logger.error('Error in fallback to team channel: %s, Channel: %s, Response: %s', resp.get('error'), slack_channel, pformat(resp))
                     else:
                         logger.error('Error: %s, Channel: %s, Response: %s', resp.get('error'), slack_channel, pformat(resp))
 
