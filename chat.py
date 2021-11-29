@@ -39,7 +39,7 @@ def send_messages_to_chat(projects_by_owner):
             else:
                 if cost > COST_ALERT_THRESHOLD:
                     emoji = ' ' + COST_ALERT_EMOJI
-                    send_message_to_this_owner = True
+                send_message_to_this_owner = True
                 message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
         message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
 
