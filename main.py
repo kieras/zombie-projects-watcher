@@ -122,13 +122,19 @@ def main():
 
 
 def _get_projects(client):
-    project_list = client.projects().list().execute()
-    projects = project_list.get('projects', [])
+    project_list_request = client.projects().search()
+    project_list_response = project_list_request.execute()
+    projects = project_list_response.get('projects', [])
+    while project_list_response.get('nextPageToken'):
+        project_list_request = client.projects().list_next(previous_request=project_list_request,\
+            previous_response=project_list_response)
+        project_list_response = project_list_request.execute()
+        projects = projects + project_list_response.get('projects', [])
     return projects
 
 
 def _get_resource_manager_client():
-    client = discovery.build("cloudresourcemanager", "v1")
+    client = discovery.build("cloudresourcemanager", "v3")
     return client
 
 
@@ -211,17 +217,17 @@ def _get_owners_id(owners):
 
 def _get_owners(client, project):
     users = []
-    project_id = project.get('projectId')
-    iamPolicy = client.projects().getIamPolicy(resource=project_id, body={}).execute()
+    project_name = project.get('name')
+    iamPolicy = client.projects().getIamPolicy(resource=project_name, body={}).execute()
     bindings = iamPolicy.get('bindings', [])
     owners = list(filter(filter_owners, bindings))
     if not owners:
-        logger.debug('No owners found for Project %s.', project_id)
+        logger.debug('No owners found for Project %s.', project_name)
     else:
         members = owners[0].get('members')
         users = list(filter(filter_users, members))
         if not users:
-            logger.debug('No owner is a user for Project %s.', project_id)
+            logger.debug('No owner is a user for Project %s.', project_name)
     users = set([user.strip('user:') for user in users])
     return list(users)
 

@@ -3,7 +3,7 @@ import re
 
 def filter_active_projects_matching_org_level(orgs):
     def filter_projects(project):
-        if project.get('lifecycleState') == 'ACTIVE': 
+        if project.get('state') == 'ACTIVE': 
             return True
         else:
             return False
