@@ -27,13 +27,14 @@ def send_messages_to_chat(projects_by_owner):
         message = "Hey *@{}*, I've noticed you are one of the owners of the following projects:\n\n".format(user_to_mention)
         for project in projects_by_owner.get(owner):
             project_id = project.get('projectId')
+            org = ORGS_NAME_MAPPING.get(project.get('org'))
             created_days_ago = int(project.get('createdDaysAgo'))
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
             emoji = ''
             if cost > COST_ALERT_THRESHOLD:
                 emoji = ' ' + COST_ALERT_EMOJI
-            message += "- `{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(project_id, created_days_ago, cost, currency, emoji)
+            message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
         message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
     
         logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)

@@ -63,6 +63,9 @@ def main():
     logger.info('Retrieving Project owners information.')
     enriched_projects = _enrich_project_info_with_owners(client, enriched_projects)
 
+    logger.info('Retrieving Project organization information.')
+    enriched_projects = _enrich_project_info_with_orgs(client, enriched_projects)
+
     if BILLING_ACTIVATED:
         logger.info('Retrieving Project cost information.')
         enriched_projects = _enrich_project_info_with_costs(enriched_projects)
@@ -172,6 +175,14 @@ def _enrich_project_info_with_costs(projects):
     return projects
 
 
+def _enrich_project_info_with_orgs(client, projects):
+    for project in projects:
+        project['org']=_get_organization(client, project)
+        logger.debug('Organization root for Project %s: %s',project.get('projectId'), project.get('org'))
+    return projects
+    
+    
+    
 def _get_cost_since_previous_month_full(costs_by_project, project):
     project_id = project.get('projectId')
     cost = costs_by_project.get(project_id, {})
@@ -230,6 +241,17 @@ def _get_owners(client, project):
             logger.debug('No owner is a user for Project %s.', project_name)
     users = set([user.strip('user:') for user in users])
     return list(users)
+
+
+def _get_organization(client, project):
+    client = client = discovery.build("cloudresourcemanager", "v1")
+    projectId = project.get('projectId')
+    ancestry_request = client.projects().getAncestry(projectId=projectId, body=None)
+    ancestry_response=ancestry_request.execute()
+    for resourceId in ancestry_response['ancestor']:
+        if resourceId['resourceId']['type'] == 'organization':
+            org = resourceId['resourceId']['id']
+    return org
 
 
 def _get_created_days_ago(project):
