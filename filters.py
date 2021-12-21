@@ -1,9 +1,9 @@
 import re
 
 
-def filter_active_projects_matching_org_level(orgs):
+def filter_projects_matching_org_level(orgs):
     def filter_projects(project):
-        if project.get('state') == 'ACTIVE': 
+        if project.get('org') in orgs:
             return True
         else:
             return False

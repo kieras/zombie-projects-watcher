@@ -73,6 +73,7 @@ debug:
   filtered_by_projects: false
   filtered_by_users: false
   filtered_by_age: false
+  filtered_by_org: false
   grouped_by_owners: false
 # Filename for a dump of the projects with enriched information in JSON format.
 # Set null to not generate the dump file.

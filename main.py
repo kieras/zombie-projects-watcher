@@ -16,7 +16,7 @@ from utils import (
     group_projects_by_owner
 )
 from filters import (
-    filter_active_projects_matching_org_level,
+    filter_projects_matching_org_level,
     filter_older_than,
     filter_owners,
     filter_users,
@@ -37,25 +37,18 @@ CHAT_ACTIVATED = CONFIG['chat']['activate'].get(bool)
 BILLING_ACTIVATED = CONFIG['billing']['activate'].get(bool)
 DUMP_JSON_FILE_NAME = CONFIG['dump_json_file_name'].get()
 
-DEBUG_ACTIVE_PROJECTS = CONFIG['debug']['active_projects'].get(bool)
 DEBUG_ENRICHED_PROJECTS = CONFIG['debug']['enriched_projects'].get(bool)
 DEBUG_FILTERED_BY_PROJECTS = CONFIG['debug']['filtered_by_projects'].get(bool)
 DEBUG_FILTERED_BY_USERS = CONFIG['debug']['filtered_by_users'].get(bool)
 DEBUG_FILTERED_BY_AGE = CONFIG['debug']['filtered_by_age'].get(bool)
 DEBUG_GROUPED_BY_OWNERS = CONFIG['debug']['grouped_by_owners'].get(bool)
+DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
 
 def main():
     client = _get_resource_manager_client()
 
     logger.info('Retrieving Projects.')
-    projects = _get_projects(client)
-
-    logger.info('Filtering active Projects.')
-    active_projects = list(filter(filter_active_projects_matching_org_level(
-        ORGS_FILTER), projects))
-
-    if DEBUG_ACTIVE_PROJECTS:
-        logger.debug('Active Projects:\n%s', pformat(active_projects))
+    active_projects = _get_projects(client)
 
     logger.info('Calculating Project age information.')
     enriched_projects = _enrich_project_info_with_age(active_projects)
@@ -101,8 +94,16 @@ def main():
     if DEBUG_FILTERED_BY_AGE:
         logger.debug('Aged Projects filter applied:\n%s', pformat(older_projects))
 
+    logger.info('Filtering Projects by org level.')
+    
+    org_projects = list(filter(filter_projects_matching_org_level(
+        ORGS_FILTER), older_projects))
+
+    if DEBUG_FILTERED_BY_ORGS:
+        logger.debug('Project by orgs:\n%s', pformat(org_projects))
+
     logger.info('Grouping Projects by owner(s).')
-    projects_by_owner = group_projects_by_owner(older_projects)
+    projects_by_owner = group_projects_by_owner(org_projects)
 
     if DEBUG_GROUPED_BY_OWNERS:
         logger.debug('Project by owner:\n%s', pformat(projects_by_owner))
@@ -125,7 +126,7 @@ def main():
 
 
 def _get_projects(client):
-    project_list_request = client.projects().search()
+    project_list_request = client.projects().search(query='state:ACTIVE')
     project_list_response = project_list_request.execute()
     projects = project_list_response.get('projects', [])
     while project_list_response.get('nextPageToken'):
