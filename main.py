@@ -245,7 +245,7 @@ def _get_owners(client, project):
 
 
 def _get_organization(client, project):
-    client = client = discovery.build("cloudresourcemanager", "v1")
+    client = discovery.build("cloudresourcemanager", "v1")
     projectId = project.get('projectId')
     ancestry_request = client.projects().getAncestry(projectId=projectId, body=None)
     ancestry_response=ancestry_request.execute()
