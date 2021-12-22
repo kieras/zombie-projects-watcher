@@ -14,6 +14,9 @@ filters:
   projects:
     - my-special-project
     - my-other-special-project
+# Activate/deactivate organization information integration.
+org_info:
+    activate: false
 slack:
   # Activate/deactivate Slack messages integration.
   activate: false

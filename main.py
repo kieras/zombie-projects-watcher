@@ -36,6 +36,7 @@ SLACK_ACTIVATED = CONFIG['slack']['activate'].get(bool)
 CHAT_ACTIVATED = CONFIG['chat']['activate'].get(bool)
 BILLING_ACTIVATED = CONFIG['billing']['activate'].get(bool)
 DUMP_JSON_FILE_NAME = CONFIG['dump_json_file_name'].get()
+ORGS_ACTIVATED = CONFIG['org_info']['activate'].get(bool)
 
 DEBUG_ENRICHED_PROJECTS = CONFIG['debug']['enriched_projects'].get(bool)
 DEBUG_FILTERED_BY_PROJECTS = CONFIG['debug']['filtered_by_projects'].get(bool)
@@ -46,6 +47,7 @@ DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
 
 def main():
     client = _get_resource_manager_client()
+    client_v1 = _get_resource_manager_client_v1() 
 
     logger.info('Retrieving Projects.')
     active_projects = _get_projects(client)
@@ -56,8 +58,11 @@ def main():
     logger.info('Retrieving Project owners information.')
     enriched_projects = _enrich_project_info_with_owners(client, enriched_projects)
 
-    logger.info('Retrieving Project organization information.')
-    enriched_projects = _enrich_project_info_with_orgs(client, enriched_projects)
+    if ORGS_ACTIVATED:
+        logger.info('Retrieving Project organization information.')
+        enriched_projects = _enrich_project_info_with_orgs(client_v1, enriched_projects)
+    else:
+        logger.info('Project organization information is not active.')
 
     if BILLING_ACTIVATED:
         logger.info('Retrieving Project cost information.')
@@ -142,6 +147,11 @@ def _get_resource_manager_client():
     return client
 
 
+def _get_resource_manager_client_v1():
+    client_v1 = discovery.build("cloudresourcemanager", "v1")
+    return client_v1
+
+
 def _enrich_project_info_with_owners(client, projects):
     for project in projects:
         project['owners'] = _get_owners(client, project)
@@ -176,13 +186,12 @@ def _enrich_project_info_with_costs(projects):
     return projects
 
 
-def _enrich_project_info_with_orgs(client, projects):
+def _enrich_project_info_with_orgs(client_v1, projects):
     for project in projects:
-        project['org']=_get_organization(client, project)
+        project['org'] = _get_organization(client_v1, project)
         logger.debug('Organization root for Project %s: %s',project.get('projectId'), project.get('org'))
     return projects
-    
-    
+
     
 def _get_cost_since_previous_month_full(costs_by_project, project):
     project_id = project.get('projectId')
@@ -244,10 +253,9 @@ def _get_owners(client, project):
     return list(users)
 
 
-def _get_organization(client, project):
-    client = client = discovery.build("cloudresourcemanager", "v1")
+def _get_organization(client_v1, project):
     projectId = project.get('projectId')
-    ancestry_request = client.projects().getAncestry(projectId=projectId, body=None)
+    ancestry_request = client_v1.projects().getAncestry(projectId=projectId, body=None)
     ancestry_response=ancestry_request.execute()
     for resourceId in ancestry_response['ancestor']:
         if resourceId['resourceId']['type'] == 'organization':
