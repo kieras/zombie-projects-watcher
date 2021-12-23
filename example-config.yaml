@@ -30,6 +30,8 @@ slack:
   team_channel_fallback: true
   # Force always send to team channel, instead of private messages.
   send_to_team_channel: false
+  # Cost minimum to actually send a message (notify) to the owner.
+  cost_min_to_notify: 0.0
   # Cost threshold to signal an alert highlight.
   cost_alert_threshold: 10.0
   # Cost threshold alert highlight emoji.
@@ -50,6 +52,8 @@ chat:
   print_only: true
   # Chat webhook URL.
   webhook_url: https://...
+  # Cost minimum to actually send a message (notify) to the owner.
+  cost_min_to_notify: 0.0
   # Cost threshold to signal an alert highlight.
   cost_alert_threshold: 10.0
   # Cost threshold alert highlight emoji.
