@@ -71,7 +71,6 @@ org_names_mapping:
   '8888888888888': my-other-org
 # Activate/deactivate further debugging info.
 debug:
-  active_projects: false
   enriched_projects: false
   filtered_by_projects: false
   filtered_by_users: false
