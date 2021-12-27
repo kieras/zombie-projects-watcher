@@ -258,8 +258,12 @@ def _get_organization(client_v1, project):
     ancestry_request = client_v1.projects().getAncestry(projectId=projectId, body=None)
     ancestry_response=ancestry_request.execute()
     for resourceId in ancestry_response['ancestor']:
-        if resourceId['resourceId']['type'] == 'organization':
-            org = resourceId['resourceId']['id']
+        if resourceId['resourceId']['type'] in ['organization','project', 'folder']:
+            if resourceId['resourceId']['type'] == 'organization':
+                org = resourceId['resourceId']['id']
+        else:
+            org = 'No organization'
+            logger.debug('No organization info for project%s.', projectId)
     return org
 
 
