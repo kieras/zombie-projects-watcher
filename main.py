@@ -263,7 +263,7 @@ def _get_organization(client_v1, project):
                 org = resourceId['resourceId']['id']
         else:
             org = 'No organization'
-            logger.debug('No organization info for project%s.', projectId)
+            logger.debug('No organization info for project %s.', projectId)
     return org
 
 
