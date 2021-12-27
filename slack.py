@@ -35,7 +35,7 @@ def send_messages(projects_by_owner):
         send_message_to_this_owner = False
         for project in projects_by_owner.get(owner):
             project_id = project.get('projectId')
-            org = ORGS_NAME_MAPPING.get(project.get('parent').get('id'))
+            org = ORGS_NAME_MAPPING.get(project.get('org'))
             created_days_ago = int(project.get('createdDaysAgo'))
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
