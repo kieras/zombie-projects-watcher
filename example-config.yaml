@@ -56,8 +56,9 @@ chat:
   cost_min_to_notify: 0.0
   # Cost threshold to signal an alert highlight.
   cost_alert_threshold: 10.0
-  # Cost threshold alert highlight emoji.
-  cost_alert_emoji: ':scream:'
+  # Cost threshold alert highlight emoji. 
+  # To get emoji hexdecimal code, https://unicode.org/emoji/charts/full-emoji-list.html
+  cost_alert_emoji: '0x1F631'
   users_mapping:
     # Mapping between Project owners login and Slack users.
     akieras: akieras

@@ -34,14 +34,16 @@ def send_messages_to_chat(projects_by_owner):
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
             emoji = ''
+            emoji_codepoint = chr(int(COST_ALERT_EMOJI, base = 16))
+            cost_alert_emoji = "{} ".format(emoji_codepoint)
             if cost <= COST_MIN_TO_NOTIFY:
                 logger.debug('- `{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
             else:
                 if cost > COST_ALERT_THRESHOLD:
-                    emoji = ' ' + COST_ALERT_EMOJI
+                    emoji = ' ' + cost_alert_emoji
                 send_message_to_this_owner = True
-                message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
-        message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
+                message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}. {}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
+        message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter."
 
         if send_message_to_this_owner:
             logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
