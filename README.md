@@ -68,6 +68,19 @@ gcloud functions deploy zombie-project-watcher \
 
 If you need to run or debug the  Google Cloud Function locally, run the command:
 
-```bash
+![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
+
+## Deploy as a Google Cloud Function
+
+Deploy the zombie-project-watcher as a Cloud Function run the following command:
+
+```
+gcloud functions deploy zombie-project-watcher --entry-point=http_request --runtime python38 --trigger-http --allow-unauthenticated
+```
+
+To test modifications before performing an update in the deploied GCF, first you need to install the functions-framework package, then use the command:
+
+```
 functions-framework --target http_request --debug
 ```
+
