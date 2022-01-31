@@ -6,6 +6,7 @@ from datetime import datetime as dt
 from googleapiclient import discovery
 
 from logging_config import setup_logging
+import functions_framework
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -44,6 +45,15 @@ DEBUG_FILTERED_BY_USERS = CONFIG['debug']['filtered_by_users'].get(bool)
 DEBUG_FILTERED_BY_AGE = CONFIG['debug']['filtered_by_age'].get(bool)
 DEBUG_GROUPED_BY_OWNERS = CONFIG['debug']['grouped_by_owners'].get(bool)
 DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
+
+@functions_framework.http
+def http_request(request):
+    try:
+        main()
+        message, status_code = "Success", 200
+    except logging.exception as err:
+        message, status_code =  "Fail", 418
+    return message, status_code
 
 def main():
     client = _get_resource_manager_client()
@@ -143,12 +153,12 @@ def _get_projects(client):
 
 
 def _get_resource_manager_client():
-    client = discovery.build("cloudresourcemanager", "v3")
+    client = discovery.build("cloudresourcemanager", "v3", cache_discovery=False)
     return client
 
 
 def _get_resource_manager_client_v1():
-    client_v1 = discovery.build("cloudresourcemanager", "v1")
+    client_v1 = discovery.build("cloudresourcemanager", "v1", cache_discovery=False)
     return client_v1
 
 
