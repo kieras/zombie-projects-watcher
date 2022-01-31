@@ -174,12 +174,12 @@ def _get_projects(client):
 
 
 def _get_resource_manager_client():
-    client = discovery.build("cloudresourcemanager", "v3")
+    client = discovery.build("cloudresourcemanager", "v3", cache_discovery=False)
     return client
 
 
 def _get_resource_manager_client_v1():
-    client_v1 = discovery.build("cloudresourcemanager", "v1")
+    client_v1 = discovery.build("cloudresourcemanager", "v1", cache_discovery=False)
     return client_v1
 
 
