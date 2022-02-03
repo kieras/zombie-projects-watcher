@@ -94,6 +94,11 @@
             ],
             "version": "==1.1.10"
         },
+        "functions-framework":{
+            "hashes": [
+            ],
+            "version": "==3.0.0"
+        },
         "futures": {
             "hashes": [
                 "sha256:3a44f286998ae64f0cc083682fcfec16c406134a81a589a5de445d7bb7c2751b",

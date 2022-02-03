@@ -47,12 +47,12 @@ Messages like this one are sent to your Chat room:
 Deploy the zombie-project-watcher as a Cloud Function run the following command:
 
 ```
-gcloud functions deploy zombie-project-watcher --entry-point=http_request --runtime python38 --trigger-http --allow-unauthenticated
+gcloud functions deploy zombie-project-watcher --entry-point=http_request --runtime python38 --trigger-http
 ```
 
-To test modifications before performing an update in the deploied GCF, first you need to install the functions-framework package, then use the command:
+To test modifications before performing an update in the deploied GCF, run the command:
 
 ```
 functions-framework --target http_request --debug
 ```
-
+Then open http://localhost:8080/ in your browser to start the test.
