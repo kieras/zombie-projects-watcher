@@ -48,11 +48,13 @@ DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
 
 @functions_framework.http
 def http_request(request):
+    now = dt.now()
+    date_value = dt.strftime(now, "%Y-%m-%dT%H:%M:%S.%fZ")
     try:
-        main()
-        message, status_code = "Success", 200
+        message, status_code =  main()
     except logging.exception as err:
-        message, status_code =  "Fail", 418
+        message, status_code =  "Fail", 410
+    message = (f'{message} on {date_value}.')
     return message, status_code
 
 def main():
@@ -138,6 +140,11 @@ def main():
         logger.info('Chat integration is not active.')
 
     logger.info('Happy Friday! :)')
+    
+    response_message = "Success "
+    response_code = 200
+
+    return response_message, response_code
 
 
 def _get_projects(client):
