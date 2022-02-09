@@ -3,6 +3,7 @@ import logging.config
 import json
 from pprint import pformat
 from datetime import datetime as dt
+import traceback as tb
 from googleapiclient import discovery
 
 from logging_config import setup_logging
@@ -50,11 +51,23 @@ DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
 def http_request(request):
     now = dt.now()
     date_value = dt.strftime(now, "%Y-%m-%dT%H:%M:%S.%fZ")
+    message = ''
+    status_code = ''
     try:
         message, status_code =  main()
-    except logging.exception as err:
-        message, status_code =  "Fail", 410
-    message = (f'{message} on {date_value}.')
+    except Exception as err:
+        logging.exception(err)
+        exception_message =  tb.format_exc().splitlines()
+        message = exception_message[-1].capitalize()
+        message = message.replace('<',' ')
+        message = message.replace('>',' ')
+        for item in message.split():
+            if item.isnumeric():
+               status_code = item
+            else:
+                status_code = 500
+    finally:
+        message = (message + ' on ' +  date_value + '!')
     return message, status_code
 
 def main():
@@ -160,12 +173,12 @@ def _get_projects(client):
 
 
 def _get_resource_manager_client():
-    client = discovery.build("cloudresourcemanager", "v3", cache_discovery=False)
+    client = discovery.build("cloudresourcemanager", "v3")
     return client
 
 
 def _get_resource_manager_client_v1():
-    client_v1 = discovery.build("cloudresourcemanager", "v1", cache_discovery=False)
+    client_v1 = discovery.build("cloudresourcemanager", "v1")
     return client_v1
 
 
