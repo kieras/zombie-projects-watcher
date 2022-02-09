@@ -2,7 +2,17 @@
 
 Helps your team control infra costs by pointing potential unused 'zombie' projects.
 
+Owners of the Projects receive messages like this one:
+
+![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
+
+Messages like this one are sent to your Chat room:
+
+![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
+
 ## Installation
+
+### Dependencies and Config
 
 Clone this repository.
 
@@ -13,9 +23,25 @@ pipenv install --ignore-pipfile --dev
 cp example-config.yaml config.yaml
 ```
 
-## Usage
+Change `config.yaml` to you needs
 
-Change `config.yaml` to you needs and run the following command:
+### Usage as a CLI command
+
+
+You can execute the program with your user authenticated in the using gcloud:
+
+```bash
+gcloud auth application-default login
+gcloud config set project PROJECT_ID
+```
+
+If you want, you can use a Service Account to authenticate by exporting the following variable:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS='service-account-key.json'
+```
+
+Run the following command:
 
 ```bash
 pipenv run python main.py
@@ -30,29 +56,21 @@ pipenv run python main.py
 
 See the `example-bigquery-billing-costs-view.sql` file of an example query to use for adding Project cost information from your [Billing Export](https://cloud.google.com/billing/docs/how-to/export-data-bigquery) data in BigQuery.
 
-## Example message on Slack
+### Usage as a Google Cloud Function
 
-Owners of the Projects receive messages like this one:
+If you want to deploy the code as a Cloud Function, run the following command:
 
-![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
-
-## Example message on Chat
-
-Messages like this one are sent to your Chat room:
-
-![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
-
-## Deploy as a Google Cloud Function
-
-Deploy the zombie-project-watcher as a Cloud Function run the following command:
-
-```
-gcloud functions deploy zombie-project-watcher --entry-point=http_request --runtime python38 --trigger-http
+```bash
+gcloud functions deploy zombie-project-watcher \
+--entry-point=http_request \
+--runtime python38 \
+--trigger-http
 ```
 
-To test modifications before performing an update in the deploied GCF, run the command:
+If you need to run or debug the  Google Cloud Function locally, run the command:
 
-```
+```bash
 functions-framework --target http_request --debug
 ```
-Then open http://localhost:8080/ in your browser to start the test.
+
+Then open [http://localhost:8080/](http://localhost:8080/) in your browser to start the test.
