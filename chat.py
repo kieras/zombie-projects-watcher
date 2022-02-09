@@ -4,6 +4,7 @@ import logging
 import requests
 from pprint import pformat
 from config import CONFIG
+from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,23 @@ COST_ALERT_THRESHOLD = CONFIG['chat']['cost_alert_threshold'].get(float)
 COST_ALERT_EMOJI = CONFIG['chat']['cost_alert_emoji'].get()
 COST_MIN_TO_NOTIFY = CONFIG['chat']['cost_min_to_notify'].get(float)
 
+NUMBER_OF_EXPENSIVE_PROJECTS = 0
+NUMBER_OF_NOTIFIED_PROJECTS = 0
+
+
+def send_message(message):
+    logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
+    if PRINT_ONLY:
+        return
+    message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
+    message_data = {
+        'text': message
+    }
+    message_data_json = json.dumps(message_data, indent=2)
+    response = requests.post(
+        WEBHOOK_URL, data=message_data_json, headers=message_headers)
+    if response.status_code != 200:
+        logger.error('Error sending message to Chat. Error: %s, Response: %s, Webhook: %s', response.status_code, pformat(response.text), WEBHOOK_URL)
 
 def send_messages_to_chat(projects_by_owner):
     if not CHAT_ACTIVATED:
@@ -37,24 +55,23 @@ def send_messages_to_chat(projects_by_owner):
             emoji_codepoint = chr(int(COST_ALERT_EMOJI, base = 16))
             cost_alert_emoji = "{} ".format(emoji_codepoint)
             if cost <= COST_MIN_TO_NOTIFY:
-                logger.debug('- `{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'.format(owner, project_id))
+                logger.debug('- `{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'\
+                    .format(owner, project_id))
             else:
                 if cost > COST_ALERT_THRESHOLD:
                     emoji = ' ' + cost_alert_emoji
+                    NUMBER_OF_EXPENSIVE_PROJECTS = NUMBER_OF_EXPENSIVE_PROJECTS + 1
                 send_message_to_this_owner = True
-                message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
+                message += "`{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n"\
+                    .format(org, project_id, created_days_ago, cost, currency, emoji)
+                NUMBER_OF_NOTIFIED_PROJECTS = NUMBER_OF_NOTIFIED_PROJECTS + 1
         message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter."
 
         if send_message_to_this_owner:
-            logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
-            if PRINT_ONLY:
-                return
-            message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
-            message_data = {
-                'text': message
-            }
-            message_data_json = json.dumps(message_data, indent=2)
-            response = requests.post(
-                WEBHOOK_URL, data=message_data_json, headers=message_headers)
-            if response.status_code != 200:
-                logger.error('Error sending message to Chat. Error: %s, Response: %s, Webhook: %s', response.status_code, pformat(response.text), WEBHOOK_URL)
+            send_message(message)
+
+    today_weekday=dt.today().strftime('%A')
+    final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher ran successfully \
+        and found {NUMBER_OF_NOTIFIED_PROJECTS} projects with costs higher than the minimun cost to notify ${COST_MIN_TO_NOTIFY} \
+        and of theses, {NUMBER_OF_EXPENSIVE_PROJECTS} cost higher than the defined threshold ${COST_ALERT_THRESHOLD}.'
+    send_message(final_of_execution_message)
