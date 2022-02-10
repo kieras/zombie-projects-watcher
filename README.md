@@ -72,5 +72,3 @@ If you need to run or debug the  Google Cloud Function locally, run the command:
 ```bash
 functions-framework --target http_request --debug
 ```
-
-Then open [http://localhost:8080/](http://localhost:8080/) in your browser to start the test.
