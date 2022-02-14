@@ -26,7 +26,7 @@ from filters import (
     filter_whitelisted_users
 )
 from billing import query_billing_info
-from slack import send_messages
+from slack import send_messages_to_slack
 from chat import send_messages_to_chat
 
 
@@ -61,6 +61,7 @@ def http_request(request):
         message = exception_message[-1].capitalize()
         message = message.replace('<',' ')
         message = message.replace('>',' ')
+        message = 'An error occurred. Details: ' + message
         for item in message.split():
             if item.isnumeric():
                status_code = item
@@ -140,7 +141,7 @@ def main():
 
     if SLACK_ACTIVATED:
         logger.info('Sending Slack messages.')
-        send_messages(projects_by_owner)
+        send_messages_to_slack(projects_by_owner)
         logger.info('All messages sent.')
     else:
         logger.info('Slack integration is not active.')
