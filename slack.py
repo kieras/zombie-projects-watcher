@@ -24,9 +24,6 @@ COST_ALERT_THRESHOLD = CONFIG['slack']['cost_alert_threshold'].get(float)
 COST_ALERT_EMOJI = CONFIG['slack']['cost_alert_emoji'].get()
 COST_MIN_TO_NOTIFY = CONFIG['slack']['cost_min_to_notify'].get(float)
 
-NUMBER_OF_EXPENSIVE_PROJECTS = 0
-NUMBER_OF_NOTIFIED_PROJECTS = 0
-
 
 def prepare_message(slack_user, message):
     slack_channel = "@{}".format(slack_user)
@@ -44,6 +41,7 @@ def prepare_message(slack_user, message):
                 logger.error('Error: %s, Channel: %s, Response: %s', resp.get('error'), slack_channel, pformat(resp))
 
 def send_messages_to_slack(projects_by_owner):
+    number_of_notified_projects = 0
     if not SLACK_ACTIVATED:
         logger.info('Slack integration is not active.')
         return
@@ -66,6 +64,7 @@ def send_messages_to_slack(projects_by_owner):
                     emoji = ' ' + COST_ALERT_EMOJI
                 send_message_to_this_owner = True
                 message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
+                number_of_notified_projects = number_of_notified_projects + 1       
         message += "If these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
         
         if send_message_to_this_owner:
@@ -73,8 +72,7 @@ def send_messages_to_slack(projects_by_owner):
 
     today_weekday=dt.today().strftime('%A')
     final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher ran successfully \
-        and found {NUMBER_OF_NOTIFIED_PROJECTS} projects with costs higher than the minimun cost to notify ${COST_MIN_TO_NOTIFY} \
-        and of theses, {NUMBER_OF_EXPENSIVE_PROJECTS} cost higher than the defined threshold ${COST_ALERT_THRESHOLD}.'           
+        and found {number_of_notified_projects} projects with costs higher than the defined notification threshold ${COST_MIN_TO_NOTIFY}.'           
     prepare_message(TEAM_CHANNEL, final_of_execution_message)
 
 def _send_message(channel, message):
