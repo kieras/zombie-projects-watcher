@@ -3,9 +3,11 @@ import logging.config
 import json
 from pprint import pformat
 from datetime import datetime as dt
+import traceback as tb
 from googleapiclient import discovery
 
 from logging_config import setup_logging
+import functions_framework
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ from filters import (
     filter_whitelisted_users
 )
 from billing import query_billing_info
-from slack import send_messages
+from slack import send_messages_to_slack
 from chat import send_messages_to_chat
 
 
@@ -44,6 +46,30 @@ DEBUG_FILTERED_BY_USERS = CONFIG['debug']['filtered_by_users'].get(bool)
 DEBUG_FILTERED_BY_AGE = CONFIG['debug']['filtered_by_age'].get(bool)
 DEBUG_GROUPED_BY_OWNERS = CONFIG['debug']['grouped_by_owners'].get(bool)
 DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
+
+@functions_framework.http
+def http_request(request):
+    now = dt.now()
+    date_value = dt.strftime(now, "%Y-%m-%dT%H:%M:%S.%fZ")
+    message = ''
+    status_code = ''
+    try:
+        message, status_code =  main()
+    except Exception as err:
+        logging.exception(err)
+        exception_message =  tb.format_exc().splitlines()
+        message = exception_message[-1].capitalize()
+        message = message.replace('<',' ')
+        message = message.replace('>',' ')
+        message = 'An error occurred. Details: ' + message
+        for item in message.split():
+            if item.isnumeric():
+               status_code = item
+            else:
+                status_code = 500
+    finally:
+        message = (message + ' on ' +  date_value + '!')
+    return message, status_code
 
 def main():
     client = _get_resource_manager_client()
@@ -115,7 +141,7 @@ def main():
 
     if SLACK_ACTIVATED:
         logger.info('Sending Slack messages.')
-        send_messages(projects_by_owner)
+        send_messages_to_slack(projects_by_owner)
         logger.info('All messages sent.')
     else:
         logger.info('Slack integration is not active.')
@@ -128,6 +154,11 @@ def main():
         logger.info('Chat integration is not active.')
 
     logger.info('Happy Friday! :)')
+    
+    response_message = "Success "
+    response_code = 200
+
+    return response_message, response_code
 
 
 def _get_projects(client):
