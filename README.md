@@ -2,7 +2,7 @@
 
 Helps your team control infra costs by pointing potential unused 'zombie' projects.
 
-If you use the Slack integration, the Owners of the Projects receive messages like this one:"
+If you use the Slack integration, the Owners of the Projects receive messages like this one:
 
 ![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
 
