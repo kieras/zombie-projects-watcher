@@ -71,8 +71,8 @@ def send_messages_to_slack(projects_by_owner):
             prepare_message(slack_user, message)
 
     today_weekday=dt.today().strftime('%A')
-    final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher ran successfully \
-        and found {number_of_notified_projects} projects with costs higher than the defined notification threshold ${COST_MIN_TO_NOTIFY}.'           
+    final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher\
+     and found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold ${COST_MIN_TO_NOTIFY}.'           
     prepare_message(TEAM_CHANNEL, final_of_execution_message)
 
 def _send_message(channel, message):
