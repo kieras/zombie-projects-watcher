@@ -32,20 +32,24 @@ def send_messages_to_chat(projects_by_owner):
             cost = project.get('costSincePreviousMonth', 0.0)
             currency = project.get('costCurrency', '$')
             emoji = ''
-            if cost > COST_ALERT_THRESHOLD:
-                emoji = ' ' + COST_ALERT_EMOJI
-            message += "- `{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n".format(org, project_id, created_days_ago, cost, currency, emoji)
-        message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter. :rip:"
+            emoji_codepoint = chr(int(COST_ALERT_EMOJI, base = 16))
+            cost_alert_emoji = "{} ".format(emoji_codepoint)
+            if cost <= COST_MIN_TO_NOTIFY:
+                logger.debug('- `{}/{}`, will not be in the message, due to its cost being lower than the minimum warning value'\
+                    .format(owner, project_id))
+            else:
+                if cost > COST_ALERT_THRESHOLD:
+                    emoji = ' ' + cost_alert_emoji
+                send_message_to_this_owner = True
+                message += "`{}/{}` created `{} days ago`, costing *`{}`* {}.{}\n"\
+                    .format(org, project_id, created_days_ago, cost, currency, emoji)
+                number_of_notified_projects = number_of_notified_projects + 1
+        message += "\nIf these projects are not being used anymore, please consider `deleting them to reduce infra costs` and clutter."
+
+        if send_message_to_this_owner:
+            send_message(message)
+
+    today_weekday=dt.today().strftime('%A')
+    final_of_execution_message = f'Happy {today_weekday}! \nZombie Projects Watcher found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold of ${COST_MIN_TO_NOTIFY}.'
     
-        logger.info('Sending Chat message to webhook %s:\n%s', WEBHOOK_URL, message)
-        if PRINT_ONLY:
-            return
-        message_headers = {'Content-Type': 'application/json; charset=UTF-8'}
-        message_data = {
-            'text': message
-        }
-        message_data_json = json.dumps(message_data, indent=2)
-        response = requests.post(
-            WEBHOOK_URL, data=message_data_json, headers=message_headers)
-        if response.status_code != 200:
-            logger.error('Error sending message to Chat. Error: %s, Response: %s, Webhook: %s', response.status_code, pformat(response.text), WEBHOOK_URL)
+    send_message(final_of_execution_message)

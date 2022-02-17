@@ -56,6 +56,10 @@ def send_messages(projects_by_owner):
                 else:
                     logger.error('Error: %s, Channel: %s, Response: %s', resp.get('error'), slack_channel, pformat(resp))
 
+    today_weekday=dt.today().strftime('%A')
+    final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher\
+     and found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold ${COST_MIN_TO_NOTIFY}.'           
+    prepare_message(TEAM_CHANNEL, final_of_execution_message)
 
 def _send_message(channel, message):
     if TEST_USER:
