@@ -69,6 +69,7 @@ def send_messages_to_chat(projects_by_owner):
             send_message(message)
 
     today_weekday=dt.today().strftime('%A')
-    final_of_execution_message = f'Happy {today_weekday}! \nZombie Projects Watcher found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold of ${COST_MIN_TO_NOTIFY}.'
-    
+    final_of_execution_message = f'Happy {today_weekday}! \
+\nToday I found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold of ${COST_MIN_TO_NOTIFY}.\
+\n\n_Note: Only projects whose owner is a real user (and not a Service Account) were considered._'    
     send_message(final_of_execution_message)
