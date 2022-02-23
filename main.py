@@ -3,9 +3,11 @@ import logging.config
 import json
 from pprint import pformat
 from datetime import datetime as dt
+import traceback as tb
 from googleapiclient import discovery
 
 from logging_config import setup_logging
+import functions_framework
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -16,7 +18,7 @@ from utils import (
     group_projects_by_owner
 )
 from filters import (
-    filter_active_projects_matching_org_level,
+    filter_projects_matching_org_level,
     filter_older_than,
     filter_owners,
     filter_users,
@@ -24,7 +26,7 @@ from filters import (
     filter_whitelisted_users
 )
 from billing import query_billing_info
-from slack import send_messages
+from slack import send_messages_to_slack
 from chat import send_messages_to_chat
 
 
@@ -36,32 +38,57 @@ SLACK_ACTIVATED = CONFIG['slack']['activate'].get(bool)
 CHAT_ACTIVATED = CONFIG['chat']['activate'].get(bool)
 BILLING_ACTIVATED = CONFIG['billing']['activate'].get(bool)
 DUMP_JSON_FILE_NAME = CONFIG['dump_json_file_name'].get()
+ORGS_ACTIVATED = CONFIG['org_info']['activate'].get(bool)
 
-DEBUG_ACTIVE_PROJECTS = CONFIG['debug']['active_projects'].get(bool)
 DEBUG_ENRICHED_PROJECTS = CONFIG['debug']['enriched_projects'].get(bool)
 DEBUG_FILTERED_BY_PROJECTS = CONFIG['debug']['filtered_by_projects'].get(bool)
 DEBUG_FILTERED_BY_USERS = CONFIG['debug']['filtered_by_users'].get(bool)
 DEBUG_FILTERED_BY_AGE = CONFIG['debug']['filtered_by_age'].get(bool)
 DEBUG_GROUPED_BY_OWNERS = CONFIG['debug']['grouped_by_owners'].get(bool)
+DEBUG_FILTERED_BY_ORGS = CONFIG['debug']['filtered_by_org'].get(bool)
+
+@functions_framework.http
+def http_request(request):
+    now = dt.now()
+    date_value = dt.strftime(now, "%Y-%m-%dT%H:%M:%S.%fZ")
+    message = ''
+    status_code = ''
+    try:
+        message, status_code =  main()
+    except Exception as err:
+        logging.exception(err)
+        exception_message =  tb.format_exc().splitlines()
+        message = exception_message[-1].capitalize()
+        message = message.replace('<',' ')
+        message = message.replace('>',' ')
+        message = 'An error occurred. Details: ' + message
+        for item in message.split():
+            if item.isnumeric():
+               status_code = item
+            else:
+                status_code = 500
+    finally:
+        message = (message + ' on ' +  date_value + '!')
+    return message, status_code
 
 def main():
     client = _get_resource_manager_client()
+    client_v1 = _get_resource_manager_client_v1() 
 
     logger.info('Retrieving Projects.')
-    projects = _get_projects(client)
-
-    logger.info('Filtering active Projects.')
-    active_projects = list(filter(filter_active_projects_matching_org_level(
-        ORGS_FILTER), projects))
-
-    if DEBUG_ACTIVE_PROJECTS:
-        logger.debug('Active Projects:\n%s', pformat(active_projects))
+    active_projects = _get_projects(client)
 
     logger.info('Calculating Project age information.')
     enriched_projects = _enrich_project_info_with_age(active_projects)
 
     logger.info('Retrieving Project owners information.')
     enriched_projects = _enrich_project_info_with_owners(client, enriched_projects)
+
+    if ORGS_ACTIVATED:
+        logger.info('Retrieving Project organization information.')
+        enriched_projects = _enrich_project_info_with_orgs(client_v1, enriched_projects)
+    else:
+        logger.info('Project organization information is not active.')
 
     if BILLING_ACTIVATED:
         logger.info('Retrieving Project cost information.')
@@ -98,15 +125,23 @@ def main():
     if DEBUG_FILTERED_BY_AGE:
         logger.debug('Aged Projects filter applied:\n%s', pformat(older_projects))
 
+    logger.info('Filtering Projects by org level.')
+    
+    org_projects = list(filter(filter_projects_matching_org_level(
+        ORGS_FILTER), older_projects))
+
+    if DEBUG_FILTERED_BY_ORGS:
+        logger.debug('Project by orgs:\n%s', pformat(org_projects))
+
     logger.info('Grouping Projects by owner(s).')
-    projects_by_owner = group_projects_by_owner(older_projects)
+    projects_by_owner = group_projects_by_owner(org_projects)
 
     if DEBUG_GROUPED_BY_OWNERS:
         logger.debug('Project by owner:\n%s', pformat(projects_by_owner))
 
     if SLACK_ACTIVATED:
         logger.info('Sending Slack messages.')
-        send_messages(projects_by_owner)
+        send_messages_to_slack(projects_by_owner)
         logger.info('All messages sent.')
     else:
         logger.info('Slack integration is not active.')
@@ -119,17 +154,33 @@ def main():
         logger.info('Chat integration is not active.')
 
     logger.info('Happy Friday! :)')
+    
+    response_message = "Success "
+    response_code = 200
+
+    return response_message, response_code
 
 
 def _get_projects(client):
-    project_list = client.projects().list().execute()
-    projects = project_list.get('projects', [])
+    project_list_request = client.projects().search(query='state:ACTIVE')
+    project_list_response = project_list_request.execute()
+    projects = project_list_response.get('projects', [])
+    while project_list_response.get('nextPageToken'):
+        project_list_request = client.projects().list_next(previous_request=project_list_request,\
+            previous_response=project_list_response)
+        project_list_response = project_list_request.execute()
+        projects = projects + project_list_response.get('projects', [])
     return projects
 
 
 def _get_resource_manager_client():
-    client = discovery.build("cloudresourcemanager", "v1")
+    client = discovery.build("cloudresourcemanager", "v3", cache_discovery=False)
     return client
+
+
+def _get_resource_manager_client_v1():
+    client_v1 = discovery.build("cloudresourcemanager", "v1", cache_discovery=False)
+    return client_v1
 
 
 def _enrich_project_info_with_owners(client, projects):
@@ -166,6 +217,13 @@ def _enrich_project_info_with_costs(projects):
     return projects
 
 
+def _enrich_project_info_with_orgs(client_v1, projects):
+    for project in projects:
+        project['org'] = _get_organization(client_v1, project)
+        logger.debug('Organization root for Project %s: %s',project.get('projectId'), project.get('org'))
+    return projects
+
+    
 def _get_cost_since_previous_month_full(costs_by_project, project):
     project_id = project.get('projectId')
     cost = costs_by_project.get(project_id, {})
@@ -211,19 +269,33 @@ def _get_owners_id(owners):
 
 def _get_owners(client, project):
     users = []
-    project_id = project.get('projectId')
-    iamPolicy = client.projects().getIamPolicy(resource=project_id, body={}).execute()
+    project_name = project.get('name')
+    iamPolicy = client.projects().getIamPolicy(resource=project_name, body={}).execute()
     bindings = iamPolicy.get('bindings', [])
     owners = list(filter(filter_owners, bindings))
     if not owners:
-        logger.debug('No owners found for Project %s.', project_id)
+        logger.debug('No owners found for Project %s.', project_name)
     else:
         members = owners[0].get('members')
         users = list(filter(filter_users, members))
         if not users:
-            logger.debug('No owner is a user for Project %s.', project_id)
+            logger.debug('No owner is a user for Project %s.', project_name)
     users = set([user.strip('user:') for user in users])
     return list(users)
+
+
+def _get_organization(client_v1, project):
+    projectId = project.get('projectId')
+    ancestry_request = client_v1.projects().getAncestry(projectId=projectId, body=None)
+    ancestry_response=ancestry_request.execute()
+    for resourceId in ancestry_response['ancestor']:
+        if resourceId['resourceId']['type'] in ['organization','project', 'folder']:
+            if resourceId['resourceId']['type'] == 'organization':
+                org = resourceId['resourceId']['id']
+        else:
+            org = 'No organization'
+            logger.debug('No organization info for project %s.', projectId)
+    return org
 
 
 def _get_created_days_ago(project):
