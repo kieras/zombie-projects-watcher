@@ -1,3 +1,4 @@
+from curses import init_pair
 import os
 import logging
 from pprint import pformat
@@ -46,6 +47,10 @@ def send_messages_to_slack(projects_by_owner):
         logger.info('Slack integration is not active.')
         return
 
+    today_weekday=dt.today().strftime('%A')
+    initial_message = f'Happy {today_weekday}!'
+    prepare_message(TEAM_CHANNEL, initial_message)
+
     for owner in projects_by_owner.keys():
         slack_user = USERS_MAP.get(owner, owner)
         message = "Hey @{}, I've noticed you are one of the owners of the following projects:\n".format(slack_user)
@@ -70,9 +75,9 @@ def send_messages_to_slack(projects_by_owner):
         if send_message_to_this_owner:
             prepare_message(slack_user, message)
 
-    today_weekday=dt.today().strftime('%A')
-    final_of_execution_message = f'Happy {today_weekday}!!! \nZombie Projects Watcher\
-     and found *{number_of_notified_projects} projects* with costs higher than the defined notification threshold ${COST_MIN_TO_NOTIFY}.'           
+    final_of_execution_message = '\nToday I found *{number_of_notified_projects} projects* with costs higher \
+        than the defined notification threshold ${COST_MIN_TO_NOTIFY}.\
+        \n\n_Note: Only projects whose owner is a real user (and not a Service Account) were considered._'           
     prepare_message(TEAM_CHANNEL, final_of_execution_message)
 
 def _send_message(channel, message):
