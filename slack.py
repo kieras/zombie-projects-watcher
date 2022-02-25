@@ -1,4 +1,3 @@
-from curses import init_pair
 import os
 import logging
 from pprint import pformat
