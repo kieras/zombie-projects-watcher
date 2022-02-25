@@ -2,7 +2,17 @@
 
 Helps your team control infra costs by pointing potential unused 'zombie' projects.
 
+If you use the Slack integration, the Owners of the Projects receive messages like this one:
+
+![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
+
+If you use the Google Chat integration, messages similar to this one are sent to your Chat Space:
+
+![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
+
 ## Installation
+
+### Dependencies and Config
 
 Clone this repository.
 
@@ -13,9 +23,24 @@ pipenv install --ignore-pipfile --dev
 cp example-config.yaml config.yaml
 ```
 
-## Usage
+Change `config.yaml` to fit your needs.
 
-Change `config.yaml` to you needs and run the following command:
+### Usage as a CLI command
+
+
+If you want to execute the program using your GCP user credentials, use the commands below:
+```bash
+gcloud auth application-default login
+gcloud config set project PROJECT_ID
+```
+
+Instead of using your GCP user credentials, you can use a Service Account Key. In this case, use the following command:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS='service-account-key.json'
+```
+
+Run the following command:
 
 ```bash
 pipenv run python main.py
@@ -30,14 +55,19 @@ pipenv run python main.py
 
 See the `example-bigquery-billing-costs-view.sql` file of an example query to use for adding Project cost information from your [Billing Export](https://cloud.google.com/billing/docs/how-to/export-data-bigquery) data in BigQuery.
 
-## Example message on Slack
+### Usage as a Google Cloud Function
 
-Owners of the Projects receive messages like this one:
+If you want to deploy the code as a Cloud Function, run the following command:
 
-![Example Slack message](example-slack-message.png?raw=true "Example Slack message")
+```bash
+gcloud functions deploy zombie-project-watcher \
+    --entry-point=http_request \
+    --runtime python38 \
+    --trigger-http
+```
 
-## Example message on Chat
+If you need to run or debug the  Google Cloud Function locally, run the command:
 
-Messages like this one are sent to your Chat room:
-
-![Example Chat message](example-chat-message.png?raw=true "Example Chat message")
+```bash
+functions-framework --target http_request --debug
+```
