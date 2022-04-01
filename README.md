@@ -27,8 +27,8 @@ Change `config.yaml` to fit your needs.
 
 ### Usage as a CLI command
 
-
 If you want to execute the program using your GCP user credentials, use the commands below:
+
 ```bash
 gcloud auth application-default login
 gcloud config set project PROJECT_ID
