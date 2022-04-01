@@ -301,6 +301,10 @@ def _get_organization(client_v1, project):
 def _get_created_days_ago(project):
     now = dt.now()
     create_time = project.get('createTime')
+    create_time_fixed = str.split(create_time, ".")
+    create_time_fixed = str.split(create_time_fixed[0], "Z")
+    create_time_fixed = create_time_fixed[0] + ".000Z"
+    create_time = create_time_fixed
     create_date_value = dt.strptime(create_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     delta = now - create_date_value
     return delta.days
