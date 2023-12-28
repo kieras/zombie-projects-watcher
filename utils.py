@@ -4,12 +4,14 @@ from config import CONFIG
 ORGS_NAME_MAPPING = CONFIG['org_names_mapping'].get()
 
 def group_projects_by_owner(projects):
-    projects_by_owner = {}
+    projects_by_owner = dict(NO_OWNER=[])
     for project in projects:
         owners = project.get('owners_id')
         for owner in owners:
             prjs = projects_by_owner.setdefault(owner, [])
             prjs.append(project)
+        if not owners:
+            projects_by_owner['NO_OWNER'].append(project)
     return projects_by_owner
 
 

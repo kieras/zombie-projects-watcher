@@ -86,7 +86,7 @@ def main():
 
     if ORGS_ACTIVATED:
         logger.info('Retrieving Project organization information.')
-        enriched_projects = _enrich_project_info_with_orgs(client_v1, enriched_projects)
+        enriched_projects = _enrich_project_info_with_org_and_path(client_v1, client, enriched_projects)
     else:
         logger.info('Project organization information is not active.')
 
@@ -126,7 +126,7 @@ def main():
         logger.debug('Aged Projects filter applied:\n%s', pformat(older_projects))
 
     logger.info('Filtering Projects by org level.')
-    
+
     org_projects = list(filter(filter_projects_matching_org_level(
         ORGS_FILTER), older_projects))
 
@@ -154,7 +154,7 @@ def main():
         logger.info('Chat integration is not active.')
 
     logger.info('Happy Friday! :)')
-    
+
     response_message = "Success "
     response_code = 200
 
@@ -217,13 +217,17 @@ def _enrich_project_info_with_costs(projects):
     return projects
 
 
-def _enrich_project_info_with_orgs(client_v1, projects):
+def _enrich_project_info_with_org_and_path(client_v1, client, projects):
+    folders = _get_folders(client)
     for project in projects:
-        project['org'] = _get_organization(client_v1, project)
+        response = _get_ancestry(client_v1, folders, project)
+        project['org'] = response['org']
+        project['path'] = response['path']
         logger.debug('Organization root for Project %s: %s',project.get('projectId'), project.get('org'))
+        logger.debug('Path for Project %s: %s',project.get('projectId'), project.get('path'))
     return projects
 
-    
+
 def _get_cost_since_previous_month_full(costs_by_project, project):
     project_id = project.get('projectId')
     cost = costs_by_project.get(project_id, {})
@@ -284,18 +288,31 @@ def _get_owners(client, project):
     return list(users)
 
 
-def _get_organization(client_v1, project):
+def _get_ancestry(client_v1, folders, project):
+    response = dict(org='No organization', path='')
     projectId = project.get('projectId')
     ancestry_request = client_v1.projects().getAncestry(projectId=projectId, body=None)
-    ancestry_response=ancestry_request.execute()
+    ancestry_response = ancestry_request.execute()
+
     for resourceId in ancestry_response['ancestor']:
-        if resourceId['resourceId']['type'] in ['organization','project', 'folder']:
+        if resourceId['resourceId']['type'] in ['organization', 'project', 'folder']:
             if resourceId['resourceId']['type'] == 'organization':
-                org = resourceId['resourceId']['id']
+                response['org'] = resourceId['resourceId']['id']
+            if resourceId['resourceId']['type'] == 'folder':
+                response['path'] = folders[resourceId['resourceId']['id']] + '/' + response['path']
         else:
-            org = 'No organization'
             logger.debug('No organization info for project %s.', projectId)
-    return org
+    return response
+
+
+def _get_folders(client):
+    folders = dict()
+    folders_request = client.folders().search(query='name:folders/*')
+    folders_response = folders_request.execute()
+    for folder in folders_response['folders']:
+        folder_number = folder['name'].split('/')[1]
+        folders[folder_number] = folder['displayName']
+    return folders
 
 
 def _get_created_days_ago(project):

@@ -23,7 +23,7 @@ def query_billing_info():
             cost_generated DESC
         LIMIT 1000
     """.format(COST_VIEW_FULL_NAME))
-    
+
     logger.debug('Executing cost query.')
     results = query_job.result()
     
